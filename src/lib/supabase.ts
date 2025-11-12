@@ -1,15 +1,28 @@
 import { createClient } from '@supabase/supabase-js'
 
+/**
+ * Configuração principal do Supabase Client
+ * (Usa variáveis de ambiente públicas para acesso seguro no front)
+ */
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+// Verificação de segurança no build
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("⚠️ Missing Supabase environment variables during build!")
+  console.warn("⚠️ Supabase environment variables estão ausentes durante o build!")
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Criação única do client Supabase
+export const supabase = createClient(supabaseUrl!, supabaseAnonKey!)
 
-// Tipos para o banco de dados
+/**
+ * ----------------------------
+ * 🔹 Tipos de dados do banco
+ * ----------------------------
+ */
+
+// Perfil de usuário
 export interface UserProfile {
   id: string
   email: string
@@ -18,6 +31,7 @@ export interface UserProfile {
   created_at: string
 }
 
+// Resultado de testes
 export interface TestResult {
   id: string
   user_id: string
@@ -28,6 +42,7 @@ export interface TestResult {
   created_at: string
 }
 
+// Pagamentos (Stripe)
 export interface Payment {
   id: string
   user_id: string
@@ -36,4 +51,21 @@ export interface Payment {
   status: 'pending' | 'completed' | 'failed'
   stripe_payment_intent_id?: string
   created_at: string
+}
+
+/**
+ * ----------------------------
+ * 🔹 Funções utilitárias
+ * ----------------------------
+ */
+
+// Teste rápido de conexão
+export async function checkSupabaseConnection() {
+  try {
+    const { data, error } = await supabase.from('profiles').select('*').limit(1)
+    if (error) throw error
+    console.log('✅ Supabase conectado:', data)
+  } catch (err) {
+    console.error('❌ Erro de conexão com Supabase:', err)
+  }
 }

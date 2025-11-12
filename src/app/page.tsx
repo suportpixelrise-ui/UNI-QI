@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Brain, Trophy, Share2, CreditCard, CheckCircle, ArrowRight, Sparkles, Target, User, Briefcase, Award, TrendingUp, BarChart3, PieChart, Medal, Crown, Zap } from 'lucide-react';
+import { Brain, Trophy, Share2, CheckCircle, ArrowRight, Sparkles, Target, User, Briefcase, Award, TrendingUp, BarChart3, PieChart, Medal, Crown, Zap } from 'lucide-react';
 import { questions, motivationalMessages, calculateIQ, getIQDescription } from '@/lib/quiz-data';
 import { basicIQQuestions, advancedIQQuestions, personalityQuestions, careerQuestions } from '@/lib/extended-quiz-data';
 import { QuizState } from '@/lib/types';
-import AuthWrapper from '@/components/auth-wrapper';
 import TestHub from '@/components/test-hub';
 import IQTestSelector from '@/components/iq-test-selector';
-import PaymentModal from '@/components/payment-modal';
 
 type AppState = 'hub' | 'iq-selector' | 'quiz' | 'personality' | 'career';
 type TestType = 'iq_basic' | 'iq_advanced' | 'personality' | 'career';
@@ -53,12 +51,11 @@ export default function UNIAQIApp() {
     score: 0,
     showMotivation: false,
     isCompleted: false,
-    isPaid: false
+    isPaid: true // Sempre true - sem pagamento
   });
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Selecionar questões baseado no tipo de teste
   const getCurrentQuestions = () => {
@@ -73,7 +70,7 @@ export default function UNIAQIApp() {
           type: 'verbal' as const,
           question: q.question,
           options: q.options,
-          correctAnswer: 0, // Para personalidade, não há resposta "correta"
+          correctAnswer: 0,
           points: 5,
           difficulty: 'medium' as const,
           category: q.category
@@ -84,13 +81,13 @@ export default function UNIAQIApp() {
           type: 'verbal' as const,
           question: q.question,
           options: q.options,
-          correctAnswer: 0, // Para carreira, não há resposta "correta"
+          correctAnswer: 0,
           points: 5,
           difficulty: 'medium' as const,
           category: q.category
         }));
       default:
-        return questions; // fallback para o teste original
+        return questions;
     }
   };
 
@@ -117,11 +114,10 @@ export default function UNIAQIApp() {
       score: 0,
       showMotivation: false,
       isCompleted: false,
-      isPaid: false
+      isPaid: true
     });
     setSelectedAnswer(null);
     setShowResult(false);
-    setShowPaymentModal(false);
   };
 
   const handleIQSubtestSelection = (subtestType: 'basic' | 'advanced') => {
@@ -144,33 +140,27 @@ export default function UNIAQIApp() {
     const currentQ = currentQuestions[quizState.currentQuestion];
     let newScore = quizState.score;
     
-    // Para testes de QI, calcular pontuação baseada na resposta correta
     if (currentTestType === 'iq_basic' || currentTestType === 'iq_advanced') {
       const isCorrect = selectedAnswer === currentQ.correctAnswer;
       newScore = quizState.score + (isCorrect ? currentQ.points : 0);
     } else {
-      // Para personalidade e carreira, apenas incrementar para tracking
       newScore = quizState.score + 1;
     }
 
     const newAnswers = [...quizState.answers, selectedAnswer];
-
-    // Verificar se deve mostrar mensagem motivacional
     const nextQuestionNum = quizState.currentQuestion + 1;
     const shouldShowMotivation = motivationalMessages.some(msg => msg.trigger === nextQuestionNum);
 
     if (nextQuestionNum >= currentQuestions.length) {
-      // Quiz completo - mostrar modal de pagamento
-      setQuizState(prev => ({
-        ...prev,
-        answers: newAnswers,
-        score: newScore,
-        isCompleted: true,
-        currentQuestion: nextQuestionNum
-      }));
-      setShowPaymentModal(true);
+      // Quiz completo - redirecionar para página de pagamento com o tipo de teste
+      const testeMap: { [key in TestType]: string } = {
+        'iq_basic': 'qi-basico',
+        'iq_advanced': 'qi-avancado',
+        'personality': 'personalidade',
+        'career': 'carreira'
+      };
+      window.location.href = `/pagamento?teste=${testeMap[currentTestType]}`;
     } else if (shouldShowMotivation && (currentTestType === 'iq_basic' || currentTestType === 'iq_advanced')) {
-      // Mostrar mensagem motivacional apenas para testes de QI
       setQuizState(prev => ({
         ...prev,
         answers: newAnswers,
@@ -179,7 +169,6 @@ export default function UNIAQIApp() {
         currentQuestion: nextQuestionNum
       }));
     } else {
-      // Próxima pergunta
       setQuizState(prev => ({
         ...prev,
         answers: newAnswers,
@@ -195,12 +184,6 @@ export default function UNIAQIApp() {
     setQuizState(prev => ({ ...prev, showMotivation: false }));
   };
 
-  const handlePaymentSuccess = () => {
-    setQuizState(prev => ({ ...prev, isPaid: true }));
-    setShowPaymentModal(false);
-    setShowResult(true);
-  };
-
   // FUNÇÃO REAL DE CÁLCULO DE PERSONALIDADE BASEADA NAS RESPOSTAS
   const calculatePersonalityResult = (): PersonalityResult => {
     const scores = {
@@ -213,14 +196,12 @@ export default function UNIAQIApp() {
       perceiving: 0
     };
 
-    // Calcular pontuações baseadas nas respostas reais
     quizState.answers.forEach((answer, index) => {
       const question = personalityQuestions[index];
       if (question) {
         const category = question.category;
-        const weight = answer + 1; // 1-4 baseado na resposta (0-3 + 1)
+        const weight = answer + 1;
         
-        // Mapear categorias para dimensões MBTI
         switch (category) {
           case 'extroversion':
             if (answer <= 1) scores.extroversion += weight * 2;
@@ -248,7 +229,6 @@ export default function UNIAQIApp() {
       }
     });
 
-    // Determinar tipo de personalidade baseado nas pontuações reais
     const E_I = scores.extroversion > scores.extroversion * 0.6 ? 'E' : 'I';
     const T_F = scores.thinking > scores.feeling ? 'T' : 'F';
     const J_P = scores.judging > scores.perceiving ? 'J' : 'P';
@@ -275,7 +255,6 @@ export default function UNIAQIApp() {
       'INFP': 'O Mediador - Poético, bondoso e altruísta'
     };
 
-    // Calcular traços baseados nas respostas reais
     const totalQuestions = quizState.answers.length;
     const traits = [
       {
@@ -335,7 +314,6 @@ export default function UNIAQIApp() {
       projects: 0
     };
 
-    // Calcular pontuações baseadas nas respostas reais
     quizState.answers.forEach((answer, index) => {
       const question = careerQuestions[index];
       if (question && categories.hasOwnProperty(question.category)) {
@@ -343,7 +321,6 @@ export default function UNIAQIApp() {
       }
     });
 
-    // Determinar carreiras baseadas nas respostas reais
     const careerMapping = [
       {
         name: 'Analista de Dados',
@@ -395,17 +372,15 @@ export default function UNIAQIApp() {
       }
     ];
 
-    // Ordenar carreiras por compatibilidade real
     const sortedCareers = careerMapping
       .sort((a, b) => b.match - a.match)
       .slice(0, 5)
       .map(career => ({
         name: career.name,
-        match: Math.max(career.match, 65), // Garantir mínimo de 65% para manter credibilidade
+        match: Math.max(career.match, 65),
         salary: career.salary
       }));
 
-    // Determinar pontos fortes baseados nas respostas
     const strengthsMapping = [
       { name: 'Pensamento Analítico', score: categories.skills + categories.problem_solving },
       { name: 'Comunicação Eficaz', score: categories.communication + categories.workstyle },
@@ -421,7 +396,6 @@ export default function UNIAQIApp() {
       .slice(0, 4)
       .map(s => s.name);
 
-    // Determinar estilo de trabalho baseado nas respostas
     const workStyleScore = categories.workstyle + categories.environment;
     const workStyle = workStyleScore > 12 ? 
       'Colaborativo e estruturado, prefere ambientes organizados' :
@@ -429,7 +403,6 @@ export default function UNIAQIApp() {
       'Equilibrado entre autonomia e colaboração' :
       'Independente e flexível, prefere liberdade criativa';
 
-    // Determinar ambiente ideal
     const environmentScore = categories.environment + categories.values;
     const environment = environmentScore > 12 ?
       'Ambiente corporativo estruturado com metas claras' :
@@ -541,27 +514,10 @@ export default function UNIAQIApp() {
     }
   };
 
-  // Calcular resultado parcial para o modal de pagamento
-  const getPartialResult = () => {
-    if (!quizState.isCompleted) return undefined;
-    
-    if (currentTestType === 'iq_basic' || currentTestType === 'iq_advanced') {
-      const maxScore = currentQuestions.reduce((sum, q) => sum + q.points, 0);
-      const percentage = Math.round((quizState.score / maxScore) * 100);
-      const iq = calculateIQ(quizState.score, currentQuestions.length);
-      
-      return { score: quizState.score, percentage, iq };
-    } else {
-      // Para personalidade e carreira, mostrar progresso
-      const percentage = Math.round((quizState.answers.length / currentQuestions.length) * 100);
-      return { score: quizState.answers.length, percentage };
-    }
-  };
-
   const TestIcon = getTestIcon();
 
   return (
-    <AuthWrapper>
+    <>
       {/* Hub Principal */}
       {appState === 'hub' && (
         <TestHub onSelectTest={handleTestSelection} />
@@ -785,12 +741,12 @@ export default function UNIAQIApp() {
             </div>
           )}
 
-          {/* Resultado final PREMIUM */}
+          {/* Resultado final */}
           {showResult && quizState.isPaid && (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4">
               <div className="max-w-6xl mx-auto w-full">
                 <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 md:p-12 border border-white/10 shadow-2xl">
-                  {/* Header Premium */}
+                  {/* Header */}
                   <div className="text-center mb-12">
                     <div className="flex justify-center mb-6">
                       <div className={`bg-gradient-to-r ${getTestGradient()} p-6 rounded-3xl relative`}>
@@ -802,11 +758,11 @@ export default function UNIAQIApp() {
                     </div>
                     
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                      🎉 Resultado Completo Desbloqueado!
+                      🎉 Seu Resultado Completo!
                     </h1>
                     
                     <p className="text-xl text-white/80 mb-8">
-                      Análise detalhada e insights exclusivos do seu {getTestTitle()}
+                      Análise detalhada do seu {getTestTitle()}
                     </p>
                   </div>
 
@@ -816,7 +772,6 @@ export default function UNIAQIApp() {
                     const maxScore = currentQuestions.reduce((sum, q) => sum + q.points, 0);
                     const percentage = Math.round((quizState.score / maxScore) * 100);
                     
-                    // Calcular análise por categoria baseada nas respostas reais
                     const categoryScores = {
                       math: { correct: 0, total: 0 },
                       logic: { correct: 0, total: 0 },
@@ -924,7 +879,7 @@ export default function UNIAQIApp() {
                         <div className="bg-gradient-to-r from-indigo-500/20 to-purple-600/20 rounded-2xl p-6 border border-indigo-500/30">
                           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
                             <PieChart className="w-6 h-6 text-indigo-400" />
-                            Análise por Habilidade (Baseada nas suas respostas)
+                            Análise por Habilidade
                           </h3>
                           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {[
@@ -968,11 +923,6 @@ export default function UNIAQIApp() {
                                   </div>
                                   <p className="text-white/60 text-xs">
                                     {categoryData.correct}/{categoryData.total} acertos
-                                  </p>
-                                  <p className="text-white/60 text-xs">
-                                    {skillPercentage >= 85 ? 'Excelente' : 
-                                     skillPercentage >= 70 ? 'Bom' : 
-                                     skillPercentage >= 50 ? 'Regular' : 'Precisa melhorar'}
                                   </p>
                                 </div>
                               );
@@ -1235,7 +1185,7 @@ export default function UNIAQIApp() {
                     <div className="bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-xl p-4 border border-yellow-400/30 inline-block">
                       <p className="text-white/90 text-sm flex items-center gap-2">
                         <Award className="w-5 h-5 text-yellow-400" />
-                        🏆 Certificado UNI-AQI Premium • Resultado 100% baseado nas suas respostas
+                        🏆 Certificado UNI-AQI • Resultado 100% baseado nas suas respostas
                       </p>
                     </div>
                   </div>
@@ -1245,16 +1195,6 @@ export default function UNIAQIApp() {
           )}
         </>
       )}
-
-      {/* Modal de Pagamento */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onPaymentSuccess={handlePaymentSuccess}
-        testType={currentTestType}
-        testTitle={getTestTitle()}
-        partialResult={getPartialResult()}
-      />
-    </AuthWrapper>
+    </>
   );
 }

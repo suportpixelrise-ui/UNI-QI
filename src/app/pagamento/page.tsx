@@ -1,7 +1,8 @@
 'use client';
+export const dynamic = "force-dynamic";
 
-import { useSearchParams } from 'next/navigation';
-import { Brain, User, Briefcase, CheckCircle, Lock, Clock, Award, ArrowRight, Sparkles } from 'lucide-react';
+import React from "react";
+import { useSearch
 
 interface Test {
   id: string;

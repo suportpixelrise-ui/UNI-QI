@@ -150,9 +150,4 @@ export default function PagamentoClient() {
     </div>
   );
 }
-
-
-      </div>
-    </div>
-  );
-}
+ 

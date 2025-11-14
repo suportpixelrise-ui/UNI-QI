@@ -1,5 +1,8 @@
 'use client';
+
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 
 import { useSearchParams } from 'next/navigation';
 import { Brain, User, Briefcase, CheckCircle, Lock, Clock, Award, ArrowRight, Sparkles } from 'lucide-react';

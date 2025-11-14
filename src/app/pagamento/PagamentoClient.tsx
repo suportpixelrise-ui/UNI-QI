@@ -1,14 +1,5 @@
 "use client";
 
-export default function PagamentoClient() {
-  return (
-    <div>
-      <h1>Tela de Pagamento OK</h1>
-    </div>
-  );
-}
-
-
 import { useSearchParams } from 'next/navigation';
 import { Brain, User, Briefcase, CheckCircle, Lock, Clock, Award, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -155,57 +146,11 @@ export default function PagamentoClient() {
             <ArrowRight className="w-6 h-6" />
           </a>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        <div className="grid md:grid-cols-4 gap-4 mb-12">
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 text-center">
-            <div className="flex justify-center mb-3">
-              <div className="bg-gradient-to-r from-blue-400 to-cyan-500 p-3 rounded-full">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-semibold mb-1">90% Pronto</p>
-            <p className="text-white/60 text-xs">Seu resultado está 90% pronto — falta só liberar a visualização.</p>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 text-center">
-            <div className="flex justify-center mb-3">
-              <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-3 rounded-full">
-                <Lock className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-semibold mb-1">100% Seguro</p>
-            <p className="text-white/60 text-xs">Pagamento 100% seguro via Stripe.</p>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 text-center">
-            <div className="flex justify-center mb-3">
-              <div className="bg-gradient-to-r from-orange-400 to-red-500 p-3 rounded-full">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-semibold mb-1">Tempo Limitado</p>
-            <p className="text-white/60 text-xs">Oferta válida por tempo limitado.</p>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 text-center">
-            <div className="flex justify-center mb-3">
-              <div className="bg-gradient-to-r from-purple-400 to-pink-500 p-3 rounded-full">
-                <Award className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <p className="text-white/90 text-sm font-semibold mb-1">10 Mil Análises</p>
-            <p className="text-white/60 text-xs">Baseado em mais de 10 mil análises.</p>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <div className="bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-xl p-6 border border-yellow-400/30 inline-block">
-            <p className="text-white/90 text-sm flex items-center gap-2">
-              <Lock className="w-5 h-5 text-yellow-400" />
-              Pagamento processado de forma segura pela Stripe
-            </p>
-          </div>
-        </div>
 
       </div>
     </div>

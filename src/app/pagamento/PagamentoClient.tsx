@@ -1,5 +1,14 @@
 "use client";
 
+export default function PagamentoClient() {
+  return (
+    <div>
+      <h1>Tela de Pagamento OK</h1>
+    </div>
+  );
+}
+
+
 import { useSearchParams } from 'next/navigation';
 import { Brain, User, Briefcase, CheckCircle, Lock, Clock, Award, ArrowRight, Sparkles } from 'lucide-react';
 
